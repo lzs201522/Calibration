@@ -436,6 +436,12 @@
 //
 //	return 0;
 //}
+
+struct Line
+{
+	float k;
+	float b;
+};
 bool PrintContour(char* path,CvSeq* countour);
 bool AutoCanny(IplImage* src, IplImage* dst, float thresh);
 bool SaveMat(char* path, CvMat* Mat,uchar flag);
@@ -459,6 +465,8 @@ void Ferrari(std::complex<double> x[4]
 	, std::complex<double> e);
 std::vector<double> BoxEllipseConvert(CvBox2D Elli);
 bool EllipseSharedTang(std::vector<double> Elli1,std::vector<double> Elli2,CvMat* line);
+bool EllipseTangK(std::vector<double> Elli, float k, CvPoint2D32f pt[2], Line line[2]);
+bool EllipseTangK(std::vector<double> Elli, double k, CvPoint2D32f pt[2], Line line[2]);
 
 //the difficulty is the fear itself
 int _tmain(int argc, char** argv)
@@ -539,8 +547,16 @@ int _tmain(int argc, char** argv)
 	std::vector<double> E1, E2;
 	E1 = BoxEllipseConvert(test);
 	E2 = BoxEllipseConvert(test2);
-	EllipseSharedTang(E1, E2, NULL);
-
+	CvMat* TempMat = cvCreateMat(4, 2, CV_32F);
+	EllipseSharedTang(E1, E2, TempMat);
+	for ( i = 0; i < 4; i++)
+	{
+		for ( j = 0; j < 2; j++)
+		{
+			std::cout << CV_MAT_ELEM(*TempMat, float, i, j) << "\t";
+		}
+		std::cout << '\n';
+	}
 	IplImage *color = cvCreateImage(cvGetSize(Bin), 8, 3);
 	cvConvertImage(Bin, color, CV_GRAY2BGR);
 	ShowPoint(color, Ellipse, Mat);
@@ -1358,5 +1374,105 @@ bool EllipseSharedTang(std::vector<double> Elli1, std::vector<double> Elli2, CvM
 	//B<=1%时承认一样
 	//谁特么会把你带进二元二次方程组里继续求啊！
 
+	
+	CvPoint2D32f pt1[2], pt2[2];
+	Line Myline1[2], Myline2[2];
+	for (i = 0; i < 4; i++)
+	{
+		
+		EllipseTangK(Elli1, RealK[i], pt1, Myline1);
+		EllipseTangK(Elli2, RealK[i], pt2, Myline2);
+		line->data.fl[2 * i] = RealK[i];
+		if ((Myline1[0].b-Myline2[0].b)<0.01)
+		{
+			line->data.fl[2 * i + 1] = Myline1[0].b;
+		}
+		if ((Myline1[0].b - Myline2[1].b)<0.01)
+		{
+			line->data.fl[2 * i + 1] = Myline1[0].b;
+		}
+		if ((Myline1[1].b - Myline2[0].b)<0.01)
+		{
+			line->data.fl[2 * i + 1] = Myline1[1].b;		
+		}
+		if ((Myline1[1].b - Myline2[1].b)<0.01)
+		{
+			line->data.fl[2 * i + 1] = Myline1[1].b;
+		}
+		
+
+	}
+	
+	return true;
+}
+//已知切线求切点与直线方程
+bool EllipseTangK(std::vector<double> Elli,float k ,CvPoint2D32f pt[2], Line line[2])
+{
+	if (Elli.size() != 6)
+	{
+		return false;
+	}
+	std::vector<double> para(6);
+
+	para[0] = (Elli[4] * Elli[4] - 4 * Elli[2]);
+	para[2] = (Elli[1] * Elli[1] - 4 * Elli[0] * Elli[2]);
+	para[1] = (4 * Elli[2] * Elli[3] - 2 * Elli[1] * Elli[4]);
+	para[3] = (Elli[3] * Elli[4] * 2 - 4 * Elli[1]);
+	para[4] = (Elli[3] * Elli[1] * 2 - 4 * Elli[0] * Elli[4]);
+	para[5] = (Elli[3] * Elli[3] - 4 * Elli[0]);
+
+	line[0].b = -(para[4] + k*para[1]) +
+		sqrt((para[4] + k*para[1])*(para[4] + k*para[1])
+		- 4 * para[2] * (para[3] * k + para[0] * k*k + para[5]));
+	line[0].b = line[0].b / 2 / para[2];
+	line[1].b = -(para[4] + k*para[1]) -
+		sqrt((para[4] + k*para[1])*(para[4] + k*para[1])
+		- 4 * para[2] * (para[3] * k + para[0] * k*k + para[5]));
+	line[1].b = line[1].b / 2 / para[2];
+	line[0].k = k;
+	line[1].k = k;
+
+	float A = (Elli[0] + Elli[1] * k + Elli[2] * k*k);
+	float B = (Elli[1] * line[0].b + 2 * Elli[2] * k*line[0].b + Elli[4] * k + Elli[3]);
+	pt[0].x = -B / 2 / A;
+	pt[0].y = line[0].k*pt[0].x + line[0].b;
+	B = (Elli[1] * line[1].b + 2 * Elli[2] * k*line[1].b + Elli[4] * k + Elli[3]);
+	pt[1].x = -B / 2 / A;
+	pt[1].y = line[1].k*pt[1].x + line[1].b;
+
+	return true;
+}
+bool EllipseTangK(std::vector<double> Elli, double k, CvPoint2D32f pt[2], Line line[2])
+{
+	if (Elli.size() != 6)
+	{
+		return false;
+	}
+	std::vector<double> para(6);
+	para[0] = (Elli[4] * Elli[4] - 4 * Elli[2]);
+	para[2] = (Elli[1] * Elli[1] - 4 * Elli[0] * Elli[2]);
+	para[1] = (4 * Elli[2] * Elli[3] - 2 * Elli[1] * Elli[4]);
+	para[3] = (Elli[3] * Elli[4] * 2 - 4 * Elli[1]);
+	para[4] = (Elli[3] * Elli[1] * 2 - 4 * Elli[0] * Elli[4]);
+	para[5] = (Elli[3] * Elli[3] - 4 * Elli[0]);
+
+	line[0].b =  -(para[4] + k*para[1]) + 
+		sqrt((para[4] + k*para[1])*(para[4] + k*para[1]) 
+		- 4 * para[2]*(para[3]*k + para[0]*k*k + para[5]));
+	line[0].b = line[0].b / 2 / para[2];
+	line[1].b = -(para[4] + k*para[1]) -
+		sqrt((para[4] + k*para[1])*(para[4] + k*para[1])
+		- 4 * para[2] * (para[3] * k + para[0] * k*k + para[5]));
+	line[1].b = line[1].b / 2 / para[2];
+	line[0].k = k;
+	line[1].k = k;
+
+	float A = (Elli[0] + Elli[1]*k + Elli[2]*k*k);
+	float B = (Elli[1]*line[0].b + 2 * Elli[2]*k*line[0].b + Elli[4]*k + Elli[3]);
+	pt[0].x = -B / 2 / A;
+	pt[0].y = line[0].k*pt[0].x+line[0].b;
+	B = (Elli[1] * line[1].b + 2 * Elli[2] * k*line[1].b + Elli[4] * k + Elli[3]);
+	pt[1].x = -B / 2 / A;
+	pt[1].y = line[1].k*pt[1].x+line[1].b;
 	return true;
 }
