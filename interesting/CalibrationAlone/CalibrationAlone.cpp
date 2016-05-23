@@ -464,9 +464,15 @@ void Ferrari(std::complex<double> x[4]
 	, std::complex<double> d
 	, std::complex<double> e);
 std::vector<double> BoxEllipseConvert(CvBox2D Elli);
-bool EllipseSharedTang(std::vector<double> Elli1,std::vector<double> Elli2,CvMat* line);
+bool EllipseSharedTang(std::vector<double> Elli1,std::vector<double> Elli2,CvMat* line,CvMat* Pair);
 bool EllipseTangK(std::vector<double> Elli, float k, CvPoint2D32f pt[2], Line line[2]);
 bool EllipseTangK(std::vector<double> Elli, double k, CvPoint2D32f pt[2], Line line[2]);
+bool EllipsePairPoint(CvBox2D b1, CvBox2D b2, CvMat PointPair);
+bool EllipseRealMiddle(CvBox2D src[99], CvPoint2D32f dst[99], CvMat* index);
+CvPoint2D32f RealCenter(CvPoint2D32f pt[4]);
+bool GetPlateDirection(CvBox2D five[99], uchar& Direct);
+bool GetBigFive(CvBox2D src[99], CvBox2D five[5]);
+CvPoint2D32f FourPointMiddle(CvPoint2D32f src[4],CvPoint2D32f perp[4]);
 
 //the difficulty is the fear itself
 int _tmain(int argc, char** argv)
@@ -531,32 +537,63 @@ int _tmain(int argc, char** argv)
 		loop = loop->h_next;
 	}
 	
-	CvMat* Mat = cvCreateMat(9,11,CV_8SC2);
+	CvMat* Mat = cvCreateMat(9,11,CV_32SC2);
 	GetIndex(Mat, Ellipse, 99);
 	SaveEllipse("ellipse.txt", Ellipse, 99);
-	CvBox2D test,test2;
-	test.center.x = test.center.y = 3;
-	test.size.height = 2;
-	test.size.width = 4;
-	test.angle = 45;
 
-	test2.center.x = test2.center.y = -3;
-	test2.size.height = 2;
-	test2.size.width = 4;
-	test2.angle = 45;
-	std::vector<double> E1, E2;
-	E1 = BoxEllipseConvert(test);
-	E2 = BoxEllipseConvert(test2);
-	CvMat* TempMat = cvCreateMat(4, 2, CV_32F);
-	EllipseSharedTang(E1, E2, TempMat);
-	for ( i = 0; i < 4; i++)
-	{
-		for ( j = 0; j < 2; j++)
-		{
-			std::cout << CV_MAT_ELEM(*TempMat, float, i, j) << "\t";
-		}
-		std::cout << '\n';
-	}
+	CvPoint2D32f Real[99];
+	EllipseRealMiddle( Ellipse, Real, Mat);
+	//CvBox2D test,test2;
+	//test.center.x = test.center.y = 3;
+	//test.size.height = 2;
+	//test.size.width = 4;
+	//test.angle = 45;
+
+	//test2.center.x = test2.center.y = -3;
+	//test2.size.height = 2;
+	//test2.size.width = 4;
+	//test2.angle = 45;
+	//std::vector<double> E1, E2;
+	//CvPoint2D32f center;
+	//center = Ellipse[1].center;
+	//Ellipse[1].center.x = Ellipse[1].center.y = 0;
+	//Ellipse[2].center.x = Ellipse[2].center.x - center.x;
+	//Ellipse[2].center.y = Ellipse[2].center.y - center.y;
+	//E1 = BoxEllipseConvert(Ellipse[1]);
+	//E2 = BoxEllipseConvert(Ellipse[2]);
+
+	//CvMat* TempMat = cvCreateMat(4, 2, CV_32F);
+	//CvMat* TempMat2 = cvCreateMat(4, 4, CV_32F);
+	//EllipseSharedTang(E1, E2, TempMat,TempMat2);
+	//for ( i = 0; i < 4; i++)
+	//{
+	//	for ( j = 0; j < 2; j++)
+	//	{
+	//		std::cout << CV_MAT_ELEM(*TempMat, float, i, j) << "\t";
+	//	}
+	//	
+	//	std::cout << '\n';
+	//}
+	//for ( i = 0; i < 4; i++)
+	//{
+	//	for (j = 0; j < 4; j++)
+	//	{
+	//		std::cout << CV_MAT_ELEM(*TempMat2, float, i, j) << "\t";
+	//		
+	//		
+	//	}
+	//	CvPoint pt[2];
+	//	pt[0].x = CV_MAT_ELEM(*TempMat2, float, i, 0)+center.x;
+	//	pt[0].y = CV_MAT_ELEM(*TempMat2, float, i, 1)+ center.y;
+	//	pt[1].x = CV_MAT_ELEM(*TempMat2, float, i, 2)+center.x;
+	//	pt[1].y = CV_MAT_ELEM(*TempMat2, float, i, 3)+center.y;
+	//	cvLine(dst, pt[0], pt[1], CV_RGB(255, 255, 255));
+	//	std::cout << '\n';
+	//}
+	//cvShowImage("show", dst);
+	//cvWaitKey(0);
+	//cvReleaseMat(&TempMat);
+	//cvReleaseMat(&TempMat2);
 	IplImage *color = cvCreateImage(cvGetSize(Bin), 8, 3);
 	cvConvertImage(Bin, color, CV_GRAY2BGR);
 	ShowPoint(color, Ellipse, Mat);
@@ -767,7 +804,7 @@ CvBox2D CheckMate(CvSeq* contour, IplImage* src)
 	while (loop)
 	{
 		RealBox = cvMinAreaRect2(loop, storage);
-		if (RealBox.size.height*RealBox.size.width>(Box.size.height)*(Box.size.width)*0.7)
+		if (RealBox.size.height*RealBox.size.width>(Box.size.height)*(Box.size.width)*0.6)
 		{
 			AccuratePoint = new CvPoint2D32f [loop->total];
 			size = loop->total;
@@ -964,7 +1001,7 @@ bool GetIndex(CvMat* index, CvBox2D* Ellipse, int num)
 		{
 			float TempLength = sqrt((Big[i].x - Big[j].x)*(Big[i].x - Big[j].x)
 				+ (Big[i].y - Big[j].y)*(Big[i].y - Big[j].y));
-			if (TempLength<MinLength)
+			if (TempLength<=MinLength)
 			{
 				MinLength = TempLength;
 				Pair[0] = Big[i];
@@ -1118,8 +1155,8 @@ bool GetIndex(CvMat* index, CvBox2D* Ellipse, int num)
 			if (length>GetPointLength(pt1, pt2))
 			{
 				length = GetPointLength(pt1, pt2);
-				index->data.ptr[2 * i] = PerpPlatePoint->data.fl[2 * j];
-				index->data.ptr[2 * i+1] = PerpPlatePoint->data.fl[2 * j+1];
+				index->data.i[2 * i] = PerpPlatePoint->data.fl[2 * j];
+				index->data.i[2 * i+1] = PerpPlatePoint->data.fl[2 * j+1];
 			}
 			
 		}
@@ -1144,7 +1181,7 @@ bool ShowPoint(IplImage* Draw, CvBox2D* Ellipse, CvMat* Index)
 	for ( i = 0; i < 99; i++)
 	{
 		memset(Text, 0, 32);
-		sprintf(Text, "%d,%d", (int)Index->data.ptr[2 * i], (int)Index->data.ptr[2 * i + 1]);
+		sprintf(Text, "%d,%d", (int)Index->data.i[2 * i], (int)Index->data.i[2 * i + 1]);
 		CvPoint cut = cvPoint((int)Ellipse[i].center.x, (int)Ellipse[i].center.y);
 		cvPutText(Draw, Text, cut, &Font, CV_RGB(255, 0, 0));
 		DrawBox(Ellipse[i], Draw);
@@ -1316,7 +1353,7 @@ std::vector<double> BoxEllipseConvert(CvBox2D Elli)
 	return dst;
 	
 }
-bool EllipseSharedTang(std::vector<double> Elli1, std::vector<double> Elli2, CvMat* line)
+bool EllipseSharedTang(std::vector<double> Elli1, std::vector<double> Elli2, CvMat* line, CvMat* Pair)
 {
 	std::complex<double> A1, B1, C1, D1, E1,F1;
 	std::complex<double> A2, B2, C2, D2, E2,F2;
@@ -1352,15 +1389,20 @@ bool EllipseSharedTang(std::vector<double> Elli1, std::vector<double> Elli2, CvM
 	
 	std::complex<double> k[4];
 	std::complex<double> a, b, c, d, e;
-	a = (A1 - A2)*(A1 - A2) - (B1 - B2)*(B1*A2 - B2*A1);
-	b = 2.0 * (A1 - A2)*(D1 - D2) - (E1 - E2)*(B1*A2 - B2*A1)
-		- (B1 - B2)*(B1*D2 - B2*D1+E1*A2-E2*A1);
-	c = 2.0*(A1 - A2)*(F1 - F2)+(D1-D2)*(D1-D2) - (E1 - E2)*(B1*D2 - B2 *D1+E1*A2-E2*A1)
-		-(B1-B2)*(B1*F2-B2*F1+E1*D2-E2*D1);
-	d = 2.0*(D1 - D2)*(F1 - F2) - (E1 - E2)*(B1*F2 - B2*F1 + E1*D2 - E2*D1)
-		-(B1-B2)*(E1*F2-E2*F1);
-	e = (F1 - F2)*(F1 - F2) - (E1 - E2)*(E1*F2 - E2*F1);
+	a = (A1 - A2)*(A1 - A2) + (B1 - B2)*(B1*A2 - B2*A1);
+	b = 2.0 * (A1 - A2)*(D1 - D2) + (E1 - E2)*(B1*A2 - B2*A1)
+		+ (B1 - B2)*(B1*D2 - B2*D1+E1*A2-E2*A1);
+	c = 2.0*(A1 - A2)*(F1 - F2)+(D1-D2)*(D1-D2) + (E1 - E2)*(B1*D2 - B2 *D1+E1*A2-E2*A1)
+		+(B1-B2)*(B1*F2-B2*F1+E1*D2-E2*D1);
+	d = 2.0*(D1 - D2)*(F1 - F2) + (E1 - E2)*(B1*F2 - B2*F1 + E1*D2 - E2*D1)
+		+(B1-B2)*(E1*F2-E2*F1);
+	e = (F1 - F2)*(F1 - F2) + (E1 - E2)*(E1*F2 - E2*F1);
 	Ferrari(k, a, b, c, d, e);
+	b = b / a;
+	c = c / a;
+	d = d / a;
+	e = e / a;
+	a = 1;
 	//费拉里大法吼！
 
 	double RealK[4];
@@ -1377,32 +1419,78 @@ bool EllipseSharedTang(std::vector<double> Elli1, std::vector<double> Elli2, CvM
 	
 	CvPoint2D32f pt1[2], pt2[2];
 	Line Myline1[2], Myline2[2];
+	uchar TwoRoot = 0;
 	for (i = 0; i < 4; i++)
 	{
-		
+		TwoRoot = 0;
 		EllipseTangK(Elli1, RealK[i], pt1, Myline1);
 		EllipseTangK(Elli2, RealK[i], pt2, Myline2);
 		line->data.fl[2 * i] = RealK[i];
-		if ((Myline1[0].b-Myline2[0].b)<0.01)
+		for ( j = 0; j < i; j++)
+		{
+			if (abs(RealK[j]-RealK[i])<0.01)
+			{
+				TwoRoot = j;
+				break;
+			}
+		}
+		if (abs(Myline1[0].b-Myline2[0].b)<0.01)
 		{
 			line->data.fl[2 * i + 1] = Myline1[0].b;
+			Pair->data.fl[4 * i] = pt1[0].x;
+			Pair->data.fl[4 * i+1] = pt1[0].y;
+			Pair->data.fl[4 * i+2] = pt2[0].x;
+			Pair->data.fl[4 * i + 3] = pt2[0].y;
+			if (line->data.fl[2*j+1] != Myline1[0].b)
+			{
+				continue;
+			}
 		}
-		if ((Myline1[0].b - Myline2[1].b)<0.01)
+		if (abs(Myline1[0].b - Myline2[1].b)<0.01)
 		{
 			line->data.fl[2 * i + 1] = Myline1[0].b;
+			Pair->data.fl[4 * i] = pt1[0].x;
+			Pair->data.fl[4 * i + 1] = pt1[0].y;
+			Pair->data.fl[4 * i + 2] = pt2[1].x;
+			Pair->data.fl[4 * i + 3] = pt2[1].y;
+			if (line->data.fl[2*j+1] != Myline1[0].b)
+			{
+				continue;
+			}
 		}
-		if ((Myline1[1].b - Myline2[0].b)<0.01)
-		{
-			line->data.fl[2 * i + 1] = Myline1[1].b;		
-		}
-		if ((Myline1[1].b - Myline2[1].b)<0.01)
+		if (abs(Myline1[1].b - Myline2[0].b)<0.01)
 		{
 			line->data.fl[2 * i + 1] = Myline1[1].b;
+			Pair->data.fl[4 * i] = pt1[1].x;
+			Pair->data.fl[4 * i + 1] = pt1[1].y;
+			Pair->data.fl[4 * i + 2] = pt2[0].x;
+			Pair->data.fl[4 * i + 3] = pt2[0].y;
+			if (line->data.fl[2 * j+1] != Myline1[1].b)
+			{
+				continue;
+			}
+		}
+		if (abs(Myline1[1].b - Myline2[1].b)<0.01)
+		{
+			line->data.fl[2 * i + 1] = Myline1[1].b;
+			Pair->data.fl[4 * i] = pt1[1].x;
+			Pair->data.fl[4 * i + 1] = pt1[1].y;
+			Pair->data.fl[4 * i + 2] = pt2[1].x;
+			Pair->data.fl[4 * i + 3] = pt2[1].y;
+			if (line->data.fl[2 * j+1] != Myline1[1].b)
+			{
+				continue;
+			}
 		}
 		
 
 	}
-	
+	for ( i = 0; i < 4; i++)
+	{
+		std::cout << line->data.fl[2 * i ] << '\t';
+		std::cout << line->data.fl[2 * i + 1] << '\t';
+		std::cout << '\n';
+	}
 	return true;
 }
 //已知切线求切点与直线方程
@@ -1475,4 +1563,324 @@ bool EllipseTangK(std::vector<double> Elli, double k, CvPoint2D32f pt[2], Line l
 	pt[1].x = -B / 2 / A;
 	pt[1].y = line[1].k*pt[1].x+line[1].b;
 	return true;
+}
+bool EllipseRealMiddle(CvBox2D src[99], CvPoint2D32f dst[99], CvMat* index)
+{
+	if (src==NULL||dst==NULL||index==NULL)
+	{
+		return false;
+	}
+	int i = 0, j = 0, k = 0;
+	CvBox2D ReGroup[99];
+	for ( i = 0; i < 99; i++)
+	{
+		ReGroup[index->data.i[2 * i] + index->data.i[2 * i + 1] * 11] = src[i];
+	}
+	//find the five main Big Point
+	CvBox2D BigPoint[5];
+	GetBigFive(ReGroup, BigPoint);
+	
+
+	CvMat* XPMat = cvCreateMat(4, 4, CV_32F);
+	CvMat* YPMat = cvCreateMat(4, 4, CV_32F);
+	CvMat* XLineMat = cvCreateMat(4, 2, CV_32F);
+	CvMat* YLineMat = cvCreateMat(4, 2, CV_32F);
+	for ( i = 0; i < 9; i++)
+	{
+		for ( j = 0; j < 11; j++)
+		{
+			CvBox2D Main, X, Y;
+			Main = ReGroup[i * 11 + j];
+			if (j+1<11)
+			{
+				X = ReGroup[i * 11 + j + 1];
+			}
+			else
+			{
+				X = ReGroup[i * 11 + j - 1];
+			}
+			if (i+1<9)
+			{
+				Y = ReGroup[(i + 1) * 11 + j];
+			}
+			else
+			{
+				Y = ReGroup[(i - 1) * 11 + j];
+			}
+
+			CvPoint2D32f PointIndex = Main.center;
+			X.center.x = X.center.x - PointIndex.x;
+			X.center.y = X.center.y - PointIndex.y;
+			Y.center.x = Y.center.x - PointIndex.x;
+			Y.center.y = Y.center.y - PointIndex.y;
+			Main.center.x = Main.center.y = 0;
+
+			for ( k = 0; k < 5; k++)
+			{
+				if (abs(Main.center.x + PointIndex.x - BigPoint[k].center.x)<0.01
+					&&abs(Main.center.y + PointIndex.y - BigPoint[k].center.y)<0.01)
+				{
+					break;
+				}
+			}
+			if (abs(Main.center.x + PointIndex.x - BigPoint[k].center.x)<0.01
+				&&abs(Main.center.y + PointIndex.y - BigPoint[k].center.y)<0.01)
+			{
+				continue;
+			}
+			for (k = 0; k < 5; k++)
+			{
+				if (abs(X.center.x+ PointIndex.x - BigPoint[k].center.x)<0.01
+					&&abs(X.center.y+ PointIndex.y - BigPoint[k].center.y)<0.01)
+				{
+					if (j -1>=0)
+					{
+						X = ReGroup[i * 11 + j -1];
+					}
+					else
+					{
+						X = ReGroup[i * 11 + j +2];
+					}
+				
+				}
+			}
+			for (k = 0; k < 5; k++)
+			{
+				if (abs(Y.center.x + PointIndex.x - BigPoint[k].center.x)<0.01
+					&&abs(Y.center.y + PointIndex.y - BigPoint[k].center.y)<0.01)
+				{
+					if (i -1>=0)
+					{
+						Y = ReGroup[(i -1) * 11 + j];
+					}
+					else
+					{
+						Y = ReGroup[(i +2) * 11 + j];
+					}
+
+
+				}
+			}
+
+			std::vector<double> V1, Vx, Vy;
+			V1 = BoxEllipseConvert(Main);
+			Vx = BoxEllipseConvert(X);
+			Vy = BoxEllipseConvert(Y);
+			EllipseSharedTang(V1, Vx, XLineMat, XPMat);
+			EllipseSharedTang(V1, Vy, YLineMat, YPMat);
+			CvPoint2D32f Xpair[2];
+			CvPoint2D32f Ypair[2];
+			CvPoint2D32f FourPoint[4];
+			Line XLine;
+			XLine.k = X.center.y / X.center.x;
+			XLine.b = 0;
+			int cnt = 0;
+			for ( k = 0; k < 4; k++)
+			{
+				Xpair[0].x = XPMat->data.fl[4 * k];
+				Xpair[0].y = XPMat->data.fl[4 * k+1];
+				Xpair[1].x = XPMat->data.fl[4 * k+2];
+				Xpair[1].y = XPMat->data.fl[4 * k+3];
+				if ((XLine.k*Xpair[0].x + XLine.b-Xpair[0].y)*(XLine.k*Xpair[1].x + XLine.b-Xpair[1].y)>0)
+				{
+
+					FourPoint[cnt].x = Xpair[0].x;
+					FourPoint[cnt].y = Xpair[0].y;
+					cnt++;
+				}
+			}
+			Line YLine;
+			YLine.k = Y.center.x / Y.center.y;
+			YLine.b = 0;
+			for (k = 0; k < 4; k++)
+			{
+				Ypair[0].x = YPMat->data.fl[4 * k];
+				Ypair[0].y = YPMat->data.fl[4 * k + 1];
+				Ypair[1].x = YPMat->data.fl[4 * k + 2];
+				Ypair[1].y = YPMat->data.fl[4 * k + 3];
+				if ((YLine.k*Ypair[0].y + YLine.b - Ypair[0].x)*(YLine.k*Ypair[1].y + YLine.b - Ypair[1].x)>0)
+				{
+
+					FourPoint[cnt].x = Ypair[0].x;
+					FourPoint[cnt].y = Ypair[0].y;
+					cnt++;
+				}
+			}
+			CvPoint2D32f RealPoint[4];
+			if (FourPoint[0].y>FourPoint[1].y)
+			{
+				RealPoint[0].x = RealPoint[1].x = 0;
+				RealPoint[0].y = 5;
+				RealPoint[1].y = -5;
+
+			}
+			else
+			{
+				RealPoint[0].x = RealPoint[1].x = 0;
+				RealPoint[0].y = -5;
+				RealPoint[1].y = 5;
+			}
+			if (FourPoint[2].x>FourPoint[3].x)
+			{
+				RealPoint[2].y = RealPoint[3].y = 0;
+				RealPoint[2].x = 5;
+				RealPoint[3].x = -5;
+
+			}
+			else
+			{
+				RealPoint[2].y = RealPoint[3].y = 0;
+				RealPoint[2].x = -5;
+				RealPoint[3].x = 5;
+			}
+			CvPoint2D32f testdst = FourPointMiddle(FourPoint, RealPoint);
+			dst[i*11+j] = RealCenter(FourPoint);
+			dst[i * 11 + j].x = dst[i * 11 + j].x + PointIndex.x;
+			dst[i * 11 + j].y = dst[i * 11 + j].y + PointIndex.y;
+
+		}
+	}
+	cvReleaseMat(&XPMat);
+	cvReleaseMat(&YPMat);
+	cvReleaseMat(&XLineMat);
+	cvReleaseMat(&YLineMat);
+	return true;
+}
+CvPoint2D32f RealCenter(CvPoint2D32f pt[4])
+{
+	CvPoint2D32f ypt;
+	float x0 = pt[0].x;
+	float y0 = pt[0].y;
+	float x1 = pt[1].x;
+	float y1 = pt[1].y;
+	float x2 = pt[2].x;
+	float y2 = pt[2].y;
+	float x3 = pt[3].x;
+	float y3 = pt[3].y;
+	float x = ((y2 - y0) + ((y1 - y0) / (x1 - x0)*x0) - ((y3 - y2) / (x3 - x2)*x2)) / (((y1 - y0) / (x1 - x0)) - (y3 - y2) / (x3 - x2));
+	float y = ((x2 - x0) + ((x1 - x0) / (y1 - y0)*y0) - ((x3 - x2) / (y3 - y2)*y2)) / (((x1 - x0) / (y1 - y0)) - (x3 - x2) / (y3 - y2));
+	ypt.x = x;
+	ypt.y = y;
+	return ypt;
+}
+
+bool GetPlateDirection(CvBox2D Big[5], uchar& Direct)
+{
+	if (Big=NULL)
+	{
+		return false;
+	}
+	int i = 0, j = 0, k = 0;
+	CvPoint2D32f Pair[2];
+	float MinLength = sqrt((Big[0].center.x - Big[1].center.x)*(Big[0].center.x - Big[1].center.x)
+		+ (Big[0].center.y - Big[1].center.y)*(Big[0].center.y - Big[1].center.y));
+	memset(Pair, 0, sizeof(CvPoint2D32f) * 2);
+	for (i = 0; i < 5; i++)
+	{
+		for (j = i + 1; j < 5; j++)
+		{
+			float TempLength = sqrt((Big[i].center.x - Big[j].center.x)*(Big[i].center.x - Big[j].center.x)
+				+ (Big[i].center.y - Big[j].center.y)*(Big[i].center.y - Big[j].center.y));
+			if (TempLength <= MinLength)
+			{
+				MinLength = TempLength;
+				Pair[0] = Big[i].center;
+				Pair[1] = Big[j].center;
+			}
+		}
+	}
+	//find the plate center
+
+	CvPoint2D32f lPair[2];
+	memset(lPair, 0, sizeof(CvPoint2D32f) * 2);
+	float MaxCosAngle = 0;
+	for (i = 0; i < 5; i++)
+	{
+		for (j = i + 1; j < 5; j++)
+		{
+			float TempLength = sqrt((Big[i].center.x - Big[j].center.x)*(Big[i].center.x - Big[j].center.x)
+				+ (Big[i].center.y - Big[j].center.y)*(Big[i].center.y - Big[j].center.y));
+			if (TempLength == MinLength)
+			{
+				continue;
+			}
+			CvPoint2D32f Vector;
+			Vector.x = Big[i].center.x - Big[j].center.x;
+			Vector.y = Big[i].center.y - Big[j].center.y;
+			CvPoint2D32f Vpair;
+			Vpair.x = Pair[0].x - Pair[1].x;
+			Vpair.y = Pair[0].y - Pair[1].y;
+			float CosAngle = (Vector.x*Vpair.x + Vector.y*Vpair.y) / MinLength / TempLength;
+			if (MaxCosAngle<abs(CosAngle))
+			{
+				MaxCosAngle = abs(CosAngle);
+				lPair[0] = Big[i].center;
+				lPair[1] = Big[j].center;
+			}
+
+		}
+	}
+	if (Pair[0].y + Pair[1].y<lPair[0].y+lPair[1].y)
+	{
+		Direct = 1;
+	}
+	else
+	{
+		Direct = 0;
+	}
+	return true;
+}
+bool GetBigFive(CvBox2D src[99], CvBox2D Big[5])
+{
+	if (src == NULL||Big==NULL)
+	{
+		return false;
+	}
+	int i = 0, j = 0, k = 0;
+	float BigArea[5];
+	Big[0] = Big[1] = Big[2] = Big[3] = Big[4] = src[0];
+	BigArea[0] = BigArea[0] = BigArea[0] = BigArea[0] = BigArea[0]
+		= src[i].size.height*src[i].size.width;
+	for (i = 0; i < 99; i++)
+	{
+		for (j = 0; j < 5; j++)
+		{
+			float area = src[i].size.height*src[i].size.width;
+			if (area>BigArea[j])
+			{
+				for (k = 4; k > j; k--)
+				{
+					BigArea[k] = BigArea[k - 1];
+					Big[k] = Big[k - 1];
+				}
+				BigArea[j] = area;
+				Big[j] = src[i];
+				break;
+			}
+		}
+	}
+	return true;
+}
+CvPoint2D32f FourPointMiddle(CvPoint2D32f src[4], CvPoint2D32f perp[4])
+{
+	//仿射变换可行
+	if (src==NULL||perp==NULL)
+	{
+		return CvPoint2D32f();
+	}
+	CvMat* PerpMat = cvCreateMat(3, 3, CV_32F);
+	CvMat* PtMat = cvCreateMat(1, 1, CV_32FC2);
+	CvMat* SrcMat = cvCreateMat(1, 1, CV_32FC2);
+	SrcMat->data.fl[0] = 0;
+	SrcMat->data.fl[1] = 0;
+	CvPoint2D32f pt;
+
+	cvGetPerspectiveTransform(perp, src, PerpMat);
+	cvPerspectiveTransform(SrcMat, PtMat, PerpMat);
+	pt.x = PtMat->data.fl[0];
+	pt.y = PtMat->data.fl[1];
+	cvReleaseMat(&SrcMat);
+	cvReleaseMat(&PtMat);
+	cvReleaseMat(&PerpMat);
+	return pt;
 }

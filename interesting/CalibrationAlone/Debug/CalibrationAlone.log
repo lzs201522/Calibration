@@ -1,9 +1,48 @@
-﻿生成启动时间为 2016/5/19 14:53:53。
+﻿生成启动时间为 2016/5/23 12:51:49。
      1>项目“D:\GitHub\Calibration\interesting\CalibrationAlone\CalibrationAlone.vcxproj”在节点 2 上(Build 个目标)。
-     1>Link:
+     1>ClCompile:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /sdl /Od /Oy- /D _CRT_SECURE_NO_WARNINGS /D WIN32 /D _DEBUG /D _CONSOLE /D _LIB /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Yu"stdafx.h" /Fp"Debug\CalibrationAlone.pch" /Fo"Debug\\" /Fd"Debug\vc120.pdb" /Gd /TP /analyze- /errorReport:prompt CalibrationAlone.cpp
+         CalibrationAlone.cpp
+     1>d:\github\calibration\interesting\calibrationalone\calibrationalone.cpp(488): warning C4305: “参数”: 从“double”到“float”截断
+     1>d:\github\calibration\interesting\calibrationalone\calibrationalone.cpp(483): warning C4101: “path”: 未引用的局部变量
+     1>d:\github\calibration\interesting\calibrationalone\calibrationalone.cpp(728): warning C4018: “<”: 有符号/无符号不匹配
+     1>d:\github\calibration\interesting\calibrationalone\calibrationalone.cpp(757): warning C4244: “=”: 从“float”转换到“unsigned int”，可能丢失数据
+     1>d:\github\calibration\interesting\calibrationalone\calibrationalone.cpp(758): warning C4244: “=”: 从“float”转换到“unsigned int”，可能丢失数据
+     1>d:\github\calibration\interesting\calibrationalone\calibrationalone.cpp(761): warning C4244: “=”: 从“float”转换到“unsigned int”，可能丢失数据
+     1>d:\github\calibration\interesting\calibrationalone\calibrationalone.cpp(762): warning C4244: “=”: 从“float”转换到“unsigned int”，可能丢失数据
+     1>d:\github\calibration\interesting\calibrationalone\calibrationalone.cpp(763): warning C4244: “=”: 从“float”转换到“unsigned int”，可能丢失数据
+     1>d:\github\calibration\interesting\calibrationalone\calibrationalone.cpp(764): warning C4244: “=”: 从“float”转换到“unsigned int”，可能丢失数据
+     1>d:\github\calibration\interesting\calibrationalone\calibrationalone.cpp(789): warning C4305: “参数”: 从“double”到“float”截断
+     1>d:\github\calibration\interesting\calibrationalone\calibrationalone.cpp(904): warning C4244: “=”: 从“float”转换到“int”，可能丢失数据
+     1>d:\github\calibration\interesting\calibrationalone\calibrationalone.cpp(905): warning C4244: “=”: 从“float”转换到“int”，可能丢失数据
+     1>d:\github\calibration\interesting\calibrationalone\calibrationalone.cpp(1138): warning C4244: “=”: 从“int”转换到“float”，可能丢失数据
+     1>d:\github\calibration\interesting\calibrationalone\calibrationalone.cpp(1139): warning C4244: “=”: 从“int”转换到“float”，可能丢失数据
+     1>d:\github\calibration\interesting\calibrationalone\calibrationalone.cpp(1158): warning C4244: “=”: 从“float”转换到“int”，可能丢失数据
+     1>d:\github\calibration\interesting\calibrationalone\calibrationalone.cpp(1159): warning C4244: “=”: 从“float”转换到“int”，可能丢失数据
+     1>d:\github\calibration\interesting\calibrationalone\calibrationalone.cpp(1329): warning C4244: “=”: 从“double”转换到“float”，可能丢失数据
+     1>d:\github\calibration\interesting\calibrationalone\calibrationalone.cpp(1428): warning C4244: “=”: 从“double”转换到“float”，可能丢失数据
+     1>d:\github\calibration\interesting\calibrationalone\calibrationalone.cpp(1514): warning C4244: “=”: 从“double”转换到“float”，可能丢失数据
+     1>d:\github\calibration\interesting\calibrationalone\calibrationalone.cpp(1515): warning C4244: “=”: 从“double”转换到“float”，可能丢失数据
+     1>d:\github\calibration\interesting\calibrationalone\calibrationalone.cpp(1518): warning C4244: “=”: 从“double”转换到“float”，可能丢失数据
+     1>d:\github\calibration\interesting\calibrationalone\calibrationalone.cpp(1519): warning C4244: “=”: 从“double”转换到“float”，可能丢失数据
+     1>d:\github\calibration\interesting\calibrationalone\calibrationalone.cpp(1523): warning C4244: “初始化”: 从“double”转换到“float”，可能丢失数据
+     1>d:\github\calibration\interesting\calibrationalone\calibrationalone.cpp(1524): warning C4244: “初始化”: 从“double”转换到“float”，可能丢失数据
+     1>d:\github\calibration\interesting\calibrationalone\calibrationalone.cpp(1527): warning C4244: “=”: 从“double”转换到“float”，可能丢失数据
+     1>d:\github\calibration\interesting\calibrationalone\calibrationalone.cpp(1549): warning C4244: “=”: 从“double”转换到“float”，可能丢失数据
+     1>d:\github\calibration\interesting\calibrationalone\calibrationalone.cpp(1550): warning C4244: “=”: 从“double”转换到“float”，可能丢失数据
+     1>d:\github\calibration\interesting\calibrationalone\calibrationalone.cpp(1553): warning C4244: “=”: 从“double”转换到“float”，可能丢失数据
+     1>d:\github\calibration\interesting\calibrationalone\calibrationalone.cpp(1554): warning C4244: “=”: 从“double”转换到“float”，可能丢失数据
+     1>d:\github\calibration\interesting\calibrationalone\calibrationalone.cpp(1555): warning C4244: “=”: 从“double”转换到“float”，可能丢失数据
+     1>d:\github\calibration\interesting\calibrationalone\calibrationalone.cpp(1556): warning C4244: “=”: 从“double”转换到“float”，可能丢失数据
+     1>d:\github\calibration\interesting\calibrationalone\calibrationalone.cpp(1558): warning C4244: “初始化”: 从“double”转换到“float”，可能丢失数据
+     1>d:\github\calibration\interesting\calibrationalone\calibrationalone.cpp(1559): warning C4244: “初始化”: 从“double”转换到“float”，可能丢失数据
+     1>d:\github\calibration\interesting\calibrationalone\calibrationalone.cpp(1562): warning C4244: “=”: 从“double”转换到“float”，可能丢失数据
+       Link:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"D:\GitHub\Calibration\interesting\Debug\CalibrationAlone.exe" /INCREMENTAL /NOLOGO opencv_calib3d2410d.lib opencv_contrib2410d.lib opencv_core2410d.lib opencv_features2d2410d.lib opencv_flann2410d.lib opencv_gpu2410d.lib opencv_highgui2410d.lib opencv_imgproc2410d.lib opencv_legacy2410d.lib opencv_ml2410d.lib opencv_nonfree2410d.lib opencv_objdetect2410d.lib opencv_photo2410d.lib opencv_stitching2410d.lib opencv_superres2410d.lib opencv_ts2410d.lib opencv_video2410d.lib opencv_videostab2410d.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"D:\GitHub\Calibration\interesting\Debug\CalibrationAlone.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"D:\GitHub\Calibration\interesting\Debug\CalibrationAlone.lib" /MACHINE:X86 Debug\CalibrationAlone.obj
+         Debug\stdafx.obj
          CalibrationAlone.vcxproj -> D:\GitHub\Calibration\interesting\Debug\CalibrationAlone.exe
      1>已完成生成项目“D:\GitHub\Calibration\interesting\CalibrationAlone\CalibrationAlone.vcxproj”(Build 个目标)的操作。
 
 生成成功。
 
-已用时间 00:00:00.05
+已用时间 00:00:01.18
