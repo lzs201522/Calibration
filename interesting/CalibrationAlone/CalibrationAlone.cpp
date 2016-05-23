@@ -473,11 +473,13 @@ CvPoint2D32f RealCenter(CvPoint2D32f pt[4]);
 bool GetPlateDirection(CvBox2D five[99], uchar& Direct);
 bool GetBigFive(CvBox2D src[99], CvBox2D five[5]);
 CvPoint2D32f FourPointMiddle(CvPoint2D32f src[4],CvPoint2D32f perp[4]);
+bool SavePtIndex(char* path, CvPoint2D32f* pt, int length);
+bool IsItEllipse(CvSeq* ellipse);
 
 //the difficulty is the fear itself
 int _tmain(int argc, char** argv)
 {
-	IplImage* raw = cvLoadImage("n14.jpg", CV_LOAD_IMAGE_ANYDEPTH);
+	IplImage* raw = cvLoadImage("n19.bmp", CV_LOAD_IMAGE_ANYDEPTH);
 	IplImage* Bin = cvCreateImage(cvGetSize(raw), 8, 1);
 	IplImage* dst = cvCreateImage(cvGetSize(raw), 8, 1);
 	char path[32];
@@ -511,12 +513,21 @@ int _tmain(int argc, char** argv)
 			{
 				//sprintf(path, "Bin%d%d.txt", (int)Box.center.x, (int)Box.center.y);
 				//PrintContour(path, loop);
-
-				cnt++;
+				CvBox2D Ellibox = cvFitEllipse2(loop);
+				float elliratio = Ellibox.size.height / Ellibox.size.width;
+				
+					if (Box.center.y>506)
+					{
+						Box.center.y=Box.center.y + 1;
+					}
+					cnt++;
+				
+				
 			}
 		}
 		loop = loop->h_next;
 	}
+
 	cnt = 0;
 	loop = BinThresh;
 	while (loop)
@@ -529,9 +540,14 @@ int _tmain(int argc, char** argv)
 			{
 				//sprintf(path, "Bin%d%d.txt", (int)Box.center.x, (int)Box.center.y);
 				//PrintContour(path, loop);
-				Ellipse[cnt] = CheckMate(loop, raw);
-				DrawBox(Ellipse[cnt], Bin);
-				cnt++;
+				CvBox2D Ellibox = cvFitEllipse2(loop);
+				if (Box.size.height*Box.size.width>=0.9*Ellibox.size.height*Ellibox.size.width)
+				{
+					Ellipse[cnt] = CheckMate(loop, raw);
+					DrawBox(Ellipse[cnt], Bin);
+					cnt++;
+				}
+				
 			}
 		}
 		loop = loop->h_next;
@@ -543,6 +559,7 @@ int _tmain(int argc, char** argv)
 
 	CvPoint2D32f Real[99];
 	EllipseRealMiddle( Ellipse, Real, Mat);
+	SavePtIndex("pt4.txt", Real, 99);
 	//CvBox2D test,test2;
 	//test.center.x = test.center.y = 3;
 	//test.size.height = 2;
@@ -804,7 +821,7 @@ CvBox2D CheckMate(CvSeq* contour, IplImage* src)
 	while (loop)
 	{
 		RealBox = cvMinAreaRect2(loop, storage);
-		if (RealBox.size.height*RealBox.size.width>(Box.size.height)*(Box.size.width)*0.6)
+		if (RealBox.size.height*RealBox.size.width>(Box.size.height)*(Box.size.width)*0.5)
 		{
 			AccuratePoint = new CvPoint2D32f [loop->total];
 			size = loop->total;
@@ -1740,6 +1757,266 @@ bool EllipseRealMiddle(CvBox2D src[99], CvPoint2D32f dst[99], CvMat* index)
 
 		}
 	}
+	//大点求圆心
+
+	for ( i = 0; i < 9; i++)
+	{
+		for ( j = 0; j < 11; j++)
+		{
+
+			for ( k = 0; k < 5; k++)
+			{
+				if (abs(BigPoint[k].center.x - ReGroup[i * 11 + j].center.x)<0.01 &&
+					abs(BigPoint[k].center.y - ReGroup[i * 11 + j].center.y)<0.01)
+				{
+					break;
+				}
+			}
+			if (k==5)
+			{
+				continue;
+			}
+			CvBox2D Main, X, Y;
+			char dx=0, dy=0;
+			Main = ReGroup[i * 11 + j];
+
+			if (j + 1<11)
+			{
+				X = ReGroup[i * 11 + j + 1];
+				dx = 1;
+			}
+			else
+			{
+				X = ReGroup[i * 11 + j - 1];
+				dx = -1;
+			}
+			if (i + 1<9)
+			{
+				Y = ReGroup[(i + 1) * 11 + j];
+				dy = 1;
+			}
+			else
+			{
+				Y = ReGroup[(i - 1) * 11 + j];
+				dy = -1;
+			}
+
+			for (k = 0; k < 5; k++)
+			{
+				if (abs(X.center.x  - BigPoint[k].center.x)<0.01
+					&&abs(X.center.y  - BigPoint[k].center.y)<0.01)
+				{
+					if (dx==1)
+					{
+						X = ReGroup[i * 11 + j - 1];
+						dx = -1;
+						break;
+					}
+					if (dx==-1)
+					{
+						X = ReGroup[i * 11 + j - 2];
+						dx = -2;
+						break;
+					}
+				}
+			}
+			for (k = 0; k < 5; k++)
+			{
+				if (abs(Y.center.x  - BigPoint[k].center.x)<0.01
+					&&abs(Y.center.y  - BigPoint[k].center.y)<0.01)
+				{
+					if (dy == 1)
+					{
+						Y = ReGroup[(i-1) * 11 + j ];
+						dy = -1;
+						break;
+					}
+					if (dx == -1)
+					{
+						X = ReGroup[(i -2) * 11 + j ];
+						dy = -2;
+						break;
+					}
+
+
+				}
+			}
+
+			CvPoint2D32f PointIndex = Main.center;
+			X.center.x = X.center.x - PointIndex.x;
+			X.center.y = X.center.y - PointIndex.y;
+			Y.center.x = Y.center.x - PointIndex.x;
+			Y.center.y = Y.center.y - PointIndex.y;
+			Main.center.x = Main.center.y = 0;
+
+			std::vector<double> V1, Vx, Vy;
+			V1 = BoxEllipseConvert(Main);
+			Vx = BoxEllipseConvert(X);
+			Vy = BoxEllipseConvert(Y);
+			EllipseSharedTang(V1, Vx, XLineMat, XPMat);
+			EllipseSharedTang(V1, Vy, YLineMat, YPMat);
+			CvPoint2D32f Xpair[2];
+			CvPoint2D32f Ypair[2];
+			CvPoint2D32f FourPoint[4];
+			Line XLine;
+			XLine.k = X.center.y / X.center.x;
+			XLine.b = 0;
+			int cnt = 0;
+			for (k = 0; k < 4; k++)
+			{
+				Xpair[0].x = XPMat->data.fl[4 * k];
+				Xpair[0].y = XPMat->data.fl[4 * k + 1];
+				Xpair[1].x = XPMat->data.fl[4 * k + 2];
+				Xpair[1].y = XPMat->data.fl[4 * k + 3];
+				if ((XLine.k*Xpair[0].x + XLine.b - Xpair[0].y)*(XLine.k*Xpair[1].x + XLine.b - Xpair[1].y)>0)
+				{
+
+					FourPoint[cnt].x = Xpair[0].x;
+					FourPoint[cnt].y = Xpair[0].y;
+					cnt++;
+				}
+			}
+			Line YLine;
+			YLine.k = Y.center.x / Y.center.y;
+			YLine.b = 0;
+			for (k = 0; k < 4; k++)
+			{
+				Ypair[0].x = YPMat->data.fl[4 * k];
+				Ypair[0].y = YPMat->data.fl[4 * k + 1];
+				Ypair[1].x = YPMat->data.fl[4 * k + 2];
+				Ypair[1].y = YPMat->data.fl[4 * k + 3];
+				if ((YLine.k*Ypair[0].y + YLine.b - Ypair[0].x)*(YLine.k*Ypair[1].y + YLine.b - Ypair[1].x)>0)
+				{
+
+					FourPoint[cnt].x = Ypair[0].x;
+					FourPoint[cnt].y = Ypair[0].y;
+					cnt++;
+				}
+			}
+
+			CvPoint2D32f RealPoint[4];
+			if (dx==1)
+			{
+				if (dy==1)
+				{
+					if (FourPoint[0].y>FourPoint[1].y)
+					{
+						RealPoint[0].x = RealPoint[1].x = 5.0/3;
+						RealPoint[0].y = sqrt(35)*10/6;
+						RealPoint[1].y = -sqrt(35) * 10 / 6;
+					}
+					else
+					{
+						RealPoint[0].x = RealPoint[1].x = 5.0 / 3;
+						RealPoint[0].y = -sqrt(35) * 10 / 6;
+						RealPoint[1].y = sqrt(35) * 10 / 6;
+					}
+					if (FourPoint[2].x>FourPoint[3].x)
+					{
+						RealPoint[2].y = RealPoint[3].y = 5.0 / 3;
+						RealPoint[2].x = sqrt(35) * 10 / 6;
+						RealPoint[3].x = -sqrt(35) * 10 / 6;
+					}
+					else
+					{
+						RealPoint[2].y = RealPoint[3].y = 5.0 / 3;
+						RealPoint[2].x = -sqrt(35) * 10 / 6;
+						RealPoint[3].x = sqrt(35) * 10 / 6;
+					}
+				}
+				if (dy==-1)
+				{
+					if (FourPoint[0].y>FourPoint[1].y)
+					{
+						RealPoint[0].x = RealPoint[1].x = 5.0 / 3;
+						RealPoint[0].y = sqrt(35) * 10 / 6;
+						RealPoint[1].y = -sqrt(35) * 10 / 6;
+					}
+					else
+					{
+						RealPoint[0].x = RealPoint[1].x = 5.0 / 3;
+						RealPoint[0].y = -sqrt(35) * 10 / 6;
+						RealPoint[1].y = sqrt(35) * 10 / 6;
+					}
+					if (FourPoint[2].x>FourPoint[3].x)
+					{
+						RealPoint[2].y = RealPoint[3].y = -5.0 / 3;
+						RealPoint[2].x = sqrt(35) * 10 / 6;
+						RealPoint[3].x = -sqrt(35) * 10 / 6;
+					}
+					else
+					{
+						RealPoint[2].y = RealPoint[3].y = -5.0 / 3;
+						RealPoint[2].x = -sqrt(35) * 10 / 6;
+						RealPoint[3].x = sqrt(35) * 10 / 6;
+					}
+				}
+
+			}
+			if (dx==-1)
+			{
+				if (dy==1)
+				{
+					if (FourPoint[0].y>FourPoint[1].y)
+					{
+						RealPoint[0].x = RealPoint[1].x = -5.0 / 3;
+						RealPoint[0].y = sqrt(35) * 10 / 6;
+						RealPoint[1].y = -sqrt(35) * 10 / 6;
+					}
+					else
+					{
+						RealPoint[0].x = RealPoint[1].x = -5.0 / 3;
+						RealPoint[0].y = -sqrt(35) * 10 / 6;
+						RealPoint[1].y = sqrt(35) * 10 / 6;
+					}
+					if (FourPoint[2].x>FourPoint[3].x)
+					{
+						RealPoint[2].y = RealPoint[3].y = 5.0 / 3;
+						RealPoint[2].x = sqrt(35) * 10 / 6;
+						RealPoint[3].x = -sqrt(35) * 10 / 6;
+					}
+					else
+					{
+						RealPoint[2].y = RealPoint[3].y = 5.0 / 3;
+						RealPoint[2].x = -sqrt(35) * 10 / 6;
+						RealPoint[3].x = sqrt(35) * 10 / 6;
+					}
+				}
+				if (dy==-1)
+				{
+					if (FourPoint[0].y>FourPoint[1].y)
+					{
+						RealPoint[0].x = RealPoint[1].x = -5.0 / 3;
+						RealPoint[0].y = sqrt(35) * 10 / 6;
+						RealPoint[1].y = -sqrt(35) * 10 / 6;
+					}
+					else
+					{
+						RealPoint[0].x = RealPoint[1].x = -5.0 / 3;
+						RealPoint[0].y = -sqrt(35) * 10 / 6;
+						RealPoint[1].y = sqrt(35) * 10 / 6;
+					}
+					if (FourPoint[2].x>FourPoint[3].x)
+					{
+						RealPoint[2].y = RealPoint[3].y = -5.0 / 3;
+						RealPoint[2].x = sqrt(35) * 10 / 6;
+						RealPoint[3].x = -sqrt(35) * 10 / 6;
+					}
+					else
+					{
+						RealPoint[2].y = RealPoint[2].y = -5.0 / 3;
+						RealPoint[2].x = -sqrt(35) * 10 / 6;
+						RealPoint[3].x = sqrt(35) * 10 / 6;
+					}
+				}
+			}
+			dst[i * 11 + j] = FourPointMiddle(FourPoint, RealPoint);
+			dst[i * 11 + j].x = dst[i * 11 + j].x + PointIndex.x;
+			dst[i * 11 + j].y = dst[i * 11 + j].y + PointIndex.y;
+		}
+
+	}
+
 	cvReleaseMat(&XPMat);
 	cvReleaseMat(&YPMat);
 	cvReleaseMat(&XLineMat);
@@ -1766,7 +2043,7 @@ CvPoint2D32f RealCenter(CvPoint2D32f pt[4])
 
 bool GetPlateDirection(CvBox2D Big[5], uchar& Direct)
 {
-	if (Big=NULL)
+	if (Big==NULL)
 	{
 		return false;
 	}
@@ -1830,6 +2107,7 @@ bool GetPlateDirection(CvBox2D Big[5], uchar& Direct)
 	}
 	return true;
 }
+
 bool GetBigFive(CvBox2D src[99], CvBox2D Big[5])
 {
 	if (src == NULL||Big==NULL)
@@ -1883,4 +2161,91 @@ CvPoint2D32f FourPointMiddle(CvPoint2D32f src[4], CvPoint2D32f perp[4])
 	cvReleaseMat(&PtMat);
 	cvReleaseMat(&PerpMat);
 	return pt;
+}
+bool GetPlateDirection(CvBox2D Big[5],CvBox2D ReGroup[5])
+{
+	if (Big == NULL||ReGroup==NULL)
+	{
+		return false;
+	}
+	int i = 0, j = 0, k = 0;
+	CvPoint2D32f Pair[2];
+	float MinLength = sqrt((Big[0].center.x - Big[1].center.x)*(Big[0].center.x - Big[1].center.x)
+		+ (Big[0].center.y - Big[1].center.y)*(Big[0].center.y - Big[1].center.y));
+	memset(Pair, 0, sizeof(CvPoint2D32f) * 2);
+	for (i = 0; i < 5; i++)
+	{
+		for (j = i + 1; j < 5; j++)
+		{
+			float TempLength = sqrt((Big[i].center.x - Big[j].center.x)*(Big[i].center.x - Big[j].center.x)
+				+ (Big[i].center.y - Big[j].center.y)*(Big[i].center.y - Big[j].center.y));
+			if (TempLength <= MinLength)
+			{
+				MinLength = TempLength;
+				Pair[0] = Big[i].center;
+				Pair[1] = Big[j].center;
+			}
+		}
+	}
+	//find the plate center
+
+	CvPoint2D32f lPair[2];
+	memset(lPair, 0, sizeof(CvPoint2D32f) * 2);
+	float MaxCosAngle = 0;
+	for (i = 0; i < 5; i++)
+	{
+		for (j = i + 1; j < 5; j++)
+		{
+			float TempLength = sqrt((Big[i].center.x - Big[j].center.x)*(Big[i].center.x - Big[j].center.x)
+				+ (Big[i].center.y - Big[j].center.y)*(Big[i].center.y - Big[j].center.y));
+			if (TempLength == MinLength)
+			{
+				continue;
+			}
+			CvPoint2D32f Vector;
+			Vector.x = Big[i].center.x - Big[j].center.x;
+			Vector.y = Big[i].center.y - Big[j].center.y;
+			CvPoint2D32f Vpair;
+			Vpair.x = Pair[0].x - Pair[1].x;
+			Vpair.y = Pair[0].y - Pair[1].y;
+			float CosAngle = (Vector.x*Vpair.x + Vector.y*Vpair.y) / MinLength / TempLength;
+			if (MaxCosAngle<abs(CosAngle))
+			{
+				MaxCosAngle = abs(CosAngle);
+				lPair[0] = Big[i].center;
+				lPair[1] = Big[j].center;
+			}
+
+		}
+	}
+	
+	return true;
+}
+bool SavePtIndex(char* path, CvPoint2D32f* pt, int length)
+{
+	if (path==NULL&&pt==NULL)
+	{
+		return false;
+	}
+	std::ofstream output(path);
+	if (output.fail())
+	{
+		return false;
+	}
+	int i = 0;
+	for ( i = 0; i < length; i++)
+	{
+		output << pt[i].x << '\t';
+		output << pt[i].y << '\t';
+		output << '\n';
+	}
+	return true;
+}
+bool IsItEllipse(CvSeq* ellipse)
+{
+	if (ellipse == NULL)
+	{
+		return false;
+	}
+	return true;
 }
